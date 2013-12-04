@@ -1,5 +1,6 @@
 import os.path
 from node import Node
+import sys
 class NeuralNet:
     def __init__(self, file=None):
         print "making nn"
@@ -31,18 +32,30 @@ class NeuralNet:
         nlist=[nilist,nhlist,nolist];
         print nlist
         f.close()
-
+        
+		
 
     def train(file, lrate, nepochs):
         print "training"
         f=open(file)
-        f.close()
+        fl=f.readlines()
+        top=fl[0].strip().split(' ')
+        if fl[1] is not nin or fl[2] is not nout:
+        	print "incompatible with init file"
+        	sys.exit()
 
-    def backprop(lrate, nepochs, data, output):
+        d=[]
+        output=[]
+        for x in xrange(1,len(fl)):
+        	l=fl[x].strip().split(' ')
+        	d.append(float(l[:-1]))
+        	output.append(int(l[-1]))
+
+        f.close()
         for epoch_num in xrange(nepochs):
             print "Epoch " + str(epoch_num) + " of "+str(nepochs)
-
-
+            for l in data:
+            	
 
 
 
