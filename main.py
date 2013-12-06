@@ -3,4 +3,5 @@ from node import Node
 
 nn=NeuralNet()
 nn.importFile("sample.NNWDBC.init")
-nn.train("wdbc.train",.1, 2);
+nn.train("wdbc.mini_train",.1, 1);
+nn.printFile("sup.txt")
