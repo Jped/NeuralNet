@@ -1,4 +1,3 @@
-import os.path
 from node import Node
 import sys
 from math import exp
@@ -97,22 +96,22 @@ class NeuralNet:
 
                 for l in xrange(1,3):
                     for k in xrange(len(self.nlist[l])):
-                        sum=0
+                        total=0
                         for i, n in enumerate(self.nlist[l-1]):
-                            sum+=self.nlist[l][k].weights[i]*n.activation
-                        sum+= -1*self.nlist[l][k].bias
-                        self.nlist[l][k].inval=sum
-                        self.nlist[l][k].activation=sigmoid(sum)
+                            total+=self.nlist[l][k].weights[i]*n.activation
+                        total+= -1*self.nlist[l][k].bias
+                        self.nlist[l][k].inval=total
+                        self.nlist[l][k].activation=sigmoid(total)
 
                 for i, onode in enumerate(self.nlist[2]):
                     # print output[e][0]
                     onode.delta=sigmoidprime(onode.inval) * (output[e][i] - onode.activation)
 
                 for i, hnode in enumerate(self.nlist[1]):
-                    sum=0
+                    total=0
                     for n in xrange(len(self.nlist[2])):
-                        sum+=self.nlist[2][n].weights[i]*self.nlist[2][n].delta
-                    hnode.delta=sigmoidprime(hnode.inval)*sum
+                        total+=self.nlist[2][n].weights[i]*self.nlist[2][n].delta
+                    hnode.delta=sigmoidprime(hnode.inval)*total
                 for l, layer in enumerate(self.nlist[1:]):
                     # print "layer" + str(l)
                     for n, node in enumerate(layer):
@@ -121,7 +120,7 @@ class NeuralNet:
                         node.bias+= -1*lrate*node.delta
 
 
-    def test(self, file):
+    def test(self, file, results):
         print "testing"
         f=open(file)
         fl=f.readlines()
@@ -156,12 +155,12 @@ class NeuralNet:
 
             for l in xrange(1,3):
                 for k in xrange(len(self.nlist[l])):
-                    sum=0
+                    total=0
                     for i, n in enumerate(self.nlist[l-1]):
-                        sum+=self.nlist[l][k].weights[i]*n.activation
-                    sum+= -1*self.nlist[l][k].bias
-                    self.nlist[l][k].inval=sum
-                    self.nlist[l][k].activation=sigmoid(sum)
+                        total+=self.nlist[l][k].weights[i]*n.activation
+                    total+= -1*self.nlist[l][k].bias
+                    self.nlist[l][k].inval=total
+                    self.nlist[l][k].activation=sigmoid(total)
 
             for i, onode in enumerate(self.nlist[2]):
                 if onode.activation >= .5:
@@ -178,17 +177,49 @@ class NeuralNet:
                     else:
                         B[o]+=1
                 else:
-                    if output[v][0]==1:
+                    if output[v][o]==1:
                         C[o]+=1
                     else:
                         D[o]+=1
         # print output
         # print values
         
-        print A[0]
-        print B[0]
-        print C[0]
-        print D[0]
+        print A
+        print B
+        print C
+        print D
+
+        OA=[float() for i in range(self.nout)]
+        P=[float() for i in range(self.nout)]
+        R=[float() for i in range(self.nout)]
+        F=[float() for i in range(self.nout)]
+        g=open(results, 'w')
+
+        for i in xrange(self.nout):
+            OA[i]=float(A[i]+D[i])/(A[i]+B[i]+C[i]+D[i])
+            P[i]=float(A[i])/(A[i]+B[i])
+            R[i]=float(A[i])/(A[i]+C[i])
+            F[i]=float(2*P[i]*R[i])/(P[i]+R[i])
+            g.writelines("%i %i %i %i %.3f %.3f %.3f %.3f\n" %(A[i],B[i],C[i],D[i],OA[i],P[i],R[i],F[i]))
+
+        print "hi"
+        AG=sum(A)
+        BG=sum(B)
+        CG=sum(C)
+        DG=sum(D)
+        OAG=float(AG+DG)/(AG+BG+CG+DG)
+        PG=float(AG)/(AG+BG)
+        RG=float(AG)/(AG+CG)
+        FG=float(2*PG*RG)/(PG+RG)
+        g.writelines("%.3f %.3f %.3f %.3f\n"%(OAG,PG,RG,FG))
+        OAM=sum(OA)/len(OA)
+        PM=sum(P)/len(P)
+        RM=sum(R)/len(R)
+        FM=float(2*PM*RM)/(PM+RM)
+        g.writelines("%.3f %.3f %.3f %.3f\n"%(OAM,PM,RM,FM))
+
+        g.close()
+
 
 
 
