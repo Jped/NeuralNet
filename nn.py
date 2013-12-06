@@ -67,19 +67,39 @@ class NeuralNet:
             output.append(map(int, l[-1]))
 
         f.close()
+        # print len(d[299])
+        # print self.nin
         for epoch_num in xrange(nepochs):
             print "Epoch " + str(epoch_num) + " of "+str(nepochs)
-            for i in xrange(self.nin):
-                for k in xrange(len(d[i])):
-                    self.nlist[0][i].activation=d[i][k]
+            for e in xrange(len(d)):
+                for i in xrange(len(d[e])):
+                    self.nlist[0][i].activation=d[e][i]
 
-            for l in xrange(1,3):
-                for k in xrange(len(self.nlist[l])):
-                    sum=0
-                    for i, n in enumerate(self.nlist[l-1]):
-                        sum+=self.nlist[l][k].weights[i]*n.activation
-                    self.nlist[l][k].inval=sum
-                    self.nlist[l][k].activation=sigmoid(sum)
+	            for l in xrange(1,3):
+	                for k in xrange(len(self.nlist[l])):
+	                    sum=0
+	                    for i, n in enumerate(self.nlist[l-1]):
+	                        sum+=self.nlist[l][k].weights[i]*n.activation
+	                    sum+= -1*self.nlist[l][k].bias
+	                    self.nlist[l][k].inval=sum
+	                    self.nlist[l][k].activation=sigmoid(sum)
+
+	            for i, onode in enumerate(self.nlist[2]):
+	            	onode.delta=sigmoidprime(onode.inval) * output[e] - onode.activation
+
+	            for i, hnode in enumerate(self.nlist[1]):
+	            	sum=0
+	            	for n in xrange(len(self.nlist[2]):
+	            		sum+=self.nlist[2][n].weights[i]*self.nlist[2][n].delta
+	            	hnode.delta=sigmoidprime(hnode.inval)*sum
+
+	            for l, layer in enumerate(self.nlist[1:]):
+	            	for n, node in enumerate(layer):
+	            		for w, weight in enumerate(node.weights):
+	            			weight+= lrate*self.nlist[l][w].activation*node.delta
+	            		node.bias+=lrate*-1*node.delta
+
+
         
                     
 
