@@ -4,7 +4,7 @@ import sys
 from math import exp
 
 def sigmoid(x):
-    return 1 / (1 + exp(x))
+    return 1 / (1 + exp(-x))
 
 def sigmoidprime(x):
     return sigmoid(x) * (1 - sigmoid(x))
@@ -51,14 +51,14 @@ class NeuralNet:
         f=open(file, 'w')
         f.writelines("%i %i %i\n" %(self.nin, self.nhid, self.nout))
         for nh in self.nlist[1]:
-            f.writelines("%f"%nh.bias)
+            f.writelines("%.3f"%nh.bias)
             for w in nh.weights:
-                f.writelines(" %f"%w)
+                f.writelines(" %.3f"%w)
             f.writelines("\n")
         for no in self.nlist[2]:
-            f.writelines("%f"%no.bias)
+            f.writelines("%.3f"%no.bias)
             for w in no.weights:
-                f.writelines(" %f"%w)
+                f.writelines(" %.3f"%w)
             f.writelines("\n")
         f.close()
 
@@ -77,8 +77,8 @@ class NeuralNet:
         output=[]
         for x in xrange(1,len(fl)):
             l=fl[x].strip().split(' ')
-            d.append(map(float,l[:-1]))
-            output.append(map(int, l[-1]))
+            d.append(map(float,l[:(-self.nout)]))
+            output.append(map(int, l[(-self.nout):]))
         print(len(d))
         print(len(d[0]))
 
@@ -105,8 +105,8 @@ class NeuralNet:
                         self.nlist[l][k].activation=sigmoid(sum)
 
                 for i, onode in enumerate(self.nlist[2]):
-                    # print output[e][i]
-                    onode.delta=sigmoidprime(onode.inval) * output[e][i] - onode.activation
+                    # print output[e][0]
+                    onode.delta=sigmoidprime(onode.inval) * (output[e][i] - onode.activation)
 
                 for i, hnode in enumerate(self.nlist[1]):
                     sum=0
@@ -117,11 +117,90 @@ class NeuralNet:
                     # print "layer" + str(l)
                     for n, node in enumerate(layer):
                         for w, weight in enumerate(node.weights):
-                            weight+= lrate*self.nlist[l][w].activation*node.delta
+                            node.weights[w]+= lrate*self.nlist[l][w].activation*node.delta
                         node.bias+= -1*lrate*node.delta
 
 
+    def test(self, file):
+        print "testing"
+        f=open(file)
+        fl=f.readlines()
+        top=fl[0].strip().split(' ')
+        if int(top[1]) is not self.nin or int(top[2]) is not self.nout:
+            print "incompatible with init file"
+            sys.exit()
+
+        d=[]
+        output=[]
+        for x in xrange(1,len(fl)):
+            l=fl[x].strip().split(' ')
+            d.append(map(float,l[:(-self.nout)]))
+            output.append(map(int, l[(-self.nout):]))
+        print(len(d))
+        print(len(d[0]))
+        print(len(output[0]))
+
+        f.close()
+        values= [[] for i in range(self.nout) for j in range(len(d))]
+        A=[int(0) for i in range(self.nout)]
+        B=[int(0) for i in range(self.nout)]
+        C=[int(0) for i in range(self.nout)]
+        D=[int(0) for i in range(self.nout)]
+        for e in xrange(len(d)):
+            print "example # " + str(e)
+            # print d[e]
+
+            for i, act in enumerate(d[e]):
+                self.nlist[0][i].activation=act
+                # print i 
+
+            for l in xrange(1,3):
+                for k in xrange(len(self.nlist[l])):
+                    sum=0
+                    for i, n in enumerate(self.nlist[l-1]):
+                        sum+=self.nlist[l][k].weights[i]*n.activation
+                    sum+= -1*self.nlist[l][k].bias
+                    self.nlist[l][k].inval=sum
+                    self.nlist[l][k].activation=sigmoid(sum)
+
+            for i, onode in enumerate(self.nlist[2]):
+                if onode.activation >= .5:
+                    values[e].append(int(1))
+                else:
+                    values[e].append(int(0))
+
+
+        for v,val in enumerate(values):
+            for o, onode in enumerate(val):
+                if onode==1:
+                    if output[v][o]==1:
+                        A[o]+=1
+                    else:
+                        B[o]+=1
+                else:
+                    if output[v][0]==1:
+                        C[o]+=1
+                    else:
+                        D[o]+=1
+        # print output
+        # print values
         
+        print A[0]
+        print B[0]
+        print C[0]
+        print D[0]
+
+
+
+
+
+
+
+
+
+
+
+
                     
 
 
